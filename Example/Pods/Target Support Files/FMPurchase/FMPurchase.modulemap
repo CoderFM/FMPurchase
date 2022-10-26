@@ -1,0 +1,6 @@
+framework module FMPurchase {
+  umbrella header "FMPurchase-umbrella.h"
+
+  export *
+  module * { export * }
+}
