@@ -9,29 +9,29 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSInteger, IAPPurchType) {
-    IAPPurchSuccess        = 0,
-    IAPPurchFailed         = 1,
-    IAPPurchCancle         = 2,
-    IAPPurchVerFailed      = 3,
-    IAPPurchVerSuccess     = 4,
-    IAPPurchNotAllow       = 5,
-    IAPPurchRestoreNotBuy  = 6,
-    IAPPurchRestoreFailed  = 7,
-    IAPPurchEmptyID        = 8,
-    IAPPurchNoProduct      = 9,
+typedef NS_ENUM(NSInteger, FMIAPPurchType) {
+    FMIAPPurchSuccess        = 0,
+    FMIAPPurchFailed         = 1,
+    FMIAPPurchCancle         = 2,
+    FMIAPPurchVerFailed      = 3,
+    FMIAPPurchVerSuccess     = 4,
+    FMIAPPurchNotAllow       = 5,
+    FMIAPPurchRestoreNotBuy  = 6,
+    FMIAPPurchRestoreFailed  = 7,
+    FMIAPPurchEmptyID        = 8,
+    FMIAPPurchNoProduct      = 9,
 };
 
 #define kNotificationBuySuccess @"kNotificationBuySuccess"
 
-typedef void (^IAPCompletionHandle)(IAPPurchType type, NSDictionary *dict);
+typedef void (^FMIAPCompletionHandle)(FMIAPPurchType type, NSDictionary *dict);
 
 @interface FMPurchaseManager : NSObject
 
 @property (nonatomic, assign) BOOL isAppstore;
 @property (nonatomic, copy)NSString *appleSubscribePassword;
 
-@property (copy, nonatomic) IAPCompletionHandle handle;
+@property (copy, nonatomic) FMIAPCompletionHandle handle;
 
 
 + (instancetype)sharedInstance;
@@ -44,15 +44,15 @@ typedef void (^IAPCompletionHandle)(IAPPurchType type, NSDictionary *dict);
 
 
 - (void)startPurchaseWithProductId:(NSString * _Nonnull)productId
-                    completeHandle:(IAPCompletionHandle _Nullable)handle;
+                    completeHandle:(FMIAPCompletionHandle _Nullable)handle;
 
 
-- (void)startSubscribeWithProductId:(NSString * _Nonnull)productId completeHandle:(IAPCompletionHandle _Nullable)handle;
+- (void)startSubscribeWithProductId:(NSString * _Nonnull)productId completeHandle:(FMIAPCompletionHandle _Nullable)handle;
 
 
-- (void)restorePurchasesWithCompleteHandle:(IAPCompletionHandle _Nullable)handle;
+- (void)restorePurchasesWithCompleteHandle:(FMIAPCompletionHandle _Nullable)handle;
 
-+ (NSString *_Nullable)tipWithType:(IAPPurchType)type;
++ (NSString *_Nullable)tipWithType:(FMIAPPurchType)type;
 
 @end
 

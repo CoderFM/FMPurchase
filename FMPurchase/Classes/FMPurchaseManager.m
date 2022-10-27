@@ -8,18 +8,17 @@
 #import "FMPurchaseManager.h"
 #import <StoreKit/StoreKit.h>
 #import "FMUserManager.h"
-#import "NSDate+MZAdd.h"
 #import <SVProgressHUD/SVProgressHUD.h>
 #import "FMMJTrackManager.h"
 
 #define kSandboxVerifyUrl @"https://sandbox.itunes.apple.com/verifyReceipt"
 #define kReleaseVerifyUrl @"https://buy.itunes.apple.com/verifyReceipt"
 
-typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
-    ENUMRestoreProgressStop = 0,
-    ENUMRestoreProgressStart = 1,
-    ENUMRestoreProgressUpdatedTransactions = 2,
-    ENUMRestoreProgressFinish = 3,
+typedef NS_ENUM(NSInteger, FMENUMRestoreProgress) {
+    FMENUMRestoreProgressStop = 0,
+    FMENUMRestoreProgressStart = 1,
+    FMENUMRestoreProgressUpdatedTransactions = 2,
+    FMENUMRestoreProgressFinish = 3,
 };
 
 @interface FMPurchaseManager () <SKPaymentTransactionObserver, SKProductsRequestDelegate> {
@@ -29,7 +28,7 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSNumber *> *transactionCountMap;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSMutableSet<SKPaymentTransaction *> *> *transactionFinishMap;
 
-@property(nonatomic, assign) ENUMRestoreProgress restoreProgress;
+@property(nonatomic, assign) FMENUMRestoreProgress restoreProgress;
 
 @end
 
@@ -65,7 +64,7 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
 }
 
 #pragma mark - public method
-- (void)startPurchaseWithProductId:(NSString * _Nonnull)productId completeHandle:(IAPCompletionHandle _Nullable)handle {
+- (void)startPurchaseWithProductId:(NSString * _Nonnull)productId completeHandle:(FMIAPCompletionHandle _Nullable)handle {
     NSArray* keyboardI = [SKPaymentQueue defaultQueue].transactions;
     if (keyboardI.count > 0) {
         SKPaymentTransaction* node = [keyboardI firstObject];
@@ -77,14 +76,14 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
     [self startSubscribeWithProductId:productId completeHandle:handle];
 }
 
-- (void)startSubscribeWithProductId:(NSString * _Nonnull)productId completeHandle:(IAPCompletionHandle _Nullable)handle {
+- (void)startSubscribeWithProductId:(NSString * _Nonnull)productId completeHandle:(FMIAPCompletionHandle _Nullable)handle {
     if (!productId) {
-        [self handleActionWithType:IAPPurchEmptyID data:nil];
+        [self handleActionWithType:FMIAPPurchEmptyID data:nil];
         return;
     }
     
     if (![SKPaymentQueue canMakePayments]) {
-        [self handleActionWithType:IAPPurchNotAllow data:nil];
+        [self handleActionWithType:FMIAPPurchNotAllow data:nil];
         return;
     }
     
@@ -101,7 +100,7 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
     NSArray *light = response.products;
     if ([light count] <= 0) {
         NSLog(@"--------------没有商品------------------");
-        [self handleActionWithType:IAPPurchNoProduct data:nil];
+        [self handleActionWithType:FMIAPPurchNoProduct data:nil];
         return;
     }
     
@@ -127,16 +126,16 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
 
 
 
-- (void)restorePurchasesWithCompleteHandle:(IAPCompletionHandle)handle {
-    _restoreProgress = ENUMRestoreProgressStart;
+- (void)restorePurchasesWithCompleteHandle:(FMIAPCompletionHandle)handle {
+    _restoreProgress = FMENUMRestoreProgressStart;
     _handle = handle;
     [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
 }
 
 #pragma mark - SKPaymentTransactionObserver
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray<SKPaymentTransaction *> *)transactions {
-    if (_restoreProgress == ENUMRestoreProgressStart) {
-        _restoreProgress = ENUMRestoreProgressUpdatedTransactions;
+    if (_restoreProgress == FMENUMRestoreProgressStart) {
+        _restoreProgress = FMENUMRestoreProgressUpdatedTransactions;
     }
     NSString *type_p = [[NSUUID UUID] UUIDString];
     [self.transactionFinishMap setValue:[NSMutableSet set] forKey:type_p];
@@ -172,17 +171,17 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
 }
 
 - (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
-    if(_restoreProgress != ENUMRestoreProgressUpdatedTransactions){
-        [self handleActionWithType:IAPPurchRestoreNotBuy data:nil];
+    if(_restoreProgress != FMENUMRestoreProgressUpdatedTransactions){
+        [self handleActionWithType:FMIAPPurchRestoreNotBuy data:nil];
     }
-    _restoreProgress = ENUMRestoreProgressFinish;
+    _restoreProgress = FMENUMRestoreProgressFinish;
 }
 
 - (void)paymentQueue:(SKPaymentQueue *)queue restoreCompletedTransactionsFailedWithError:(NSError *)error {
-    if(_restoreProgress != ENUMRestoreProgressUpdatedTransactions){
-        [self handleActionWithType:IAPPurchRestoreFailed data:@{@"error":error.localizedDescription}];
+    if(_restoreProgress != FMENUMRestoreProgressUpdatedTransactions){
+        [self handleActionWithType:FMIAPPurchRestoreFailed data:@{@"error":error.localizedDescription}];
     }
-    _restoreProgress = ENUMRestoreProgressFinish;
+    _restoreProgress = FMENUMRestoreProgressFinish;
 }
 
 - (BOOL)paymentQueue:(SKPaymentQueue *)queue shouldAddStorePayment:(SKPayment *)payment forProduct:(SKProduct *)product {
@@ -210,9 +209,9 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
 
 - (void)failedTransaction:(SKPaymentTransaction *)transaction {
     if (transaction.error.code != SKErrorPaymentCancelled) {
-        [self handleActionWithType:IAPPurchFailed data:@{@"error":transaction.error.localizedDescription}];
+        [self handleActionWithType:FMIAPPurchFailed data:@{@"error":transaction.error.localizedDescription}];
     } else {
-        [self handleActionWithType:IAPPurchCancle data:nil];
+        [self handleActionWithType:FMIAPPurchCancle data:nil];
     }
 }
 
@@ -226,7 +225,7 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
     
     if (!mbient) {
         
-        [self handleActionWithType:IAPPurchVerFailed data:nil];
+        [self handleActionWithType:FMIAPPurchVerFailed data:nil];
             NSDictionary * s_widthI = @{@"applaud":@(295), @"turn":@(203)};
              while (s_widthI.count > 136) { break; }
         return;
@@ -234,7 +233,7 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
     
     NSDictionary *a_manager = [NSJSONSerialization JSONObjectWithData:mbient options:0 error:nil];
     
-    [self handleActionWithType:IAPPurchSuccess data:a_manager];
+    [self handleActionWithType:FMIAPPurchSuccess data:a_manager];
     
     NSError *netword;
             double tabP = 112.0;
@@ -247,7 +246,7 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
     login = @{@"receipt-data": falsh, @"password":self.appleSubscribePassword};
     NSData *fail = [NSJSONSerialization dataWithJSONObject:login options:0 error:&netword];
     if (!fail) {
-        [self handleActionWithType:IAPPurchVerFailed data:nil];
+        [self handleActionWithType:FMIAPPurchVerFailed data:nil];
         return;
     }
     NSString *public_c;
@@ -264,14 +263,14 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
     NSURLSessionDataTask *define = [convert dataTaskWithRequest:text completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable netword) {
         if (netword) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self handleActionWithType:IAPPurchVerFailed data:nil];
+                [self handleActionWithType:FMIAPPurchVerFailed data:nil];
             });
         } else {
             NSError *netword;
             NSDictionary *lines = [NSJSONSerialization JSONObjectWithData:data options:0 error:&netword];
             if (!lines) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self handleActionWithType:IAPPurchVerFailed data:nil];
+                    [self handleActionWithType:FMIAPPurchVerFailed data:nil];
                 });
             }
             NSString *type_u = [NSString stringWithFormat:@"%@", lines[@"status"]];
@@ -301,17 +300,19 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
                     if (passwordD.count > 0) {
                         for (NSDictionary *latest_receipt_dic in passwordD) {
                             NSUInteger baset = [[latest_receipt_dic[@"expires_date_ms"] substringToIndex:10] integerValue];
-                            NSUInteger hidden = [[NSDate date] longlongTimeIntervalSince1970];
+                            NSTimeInterval time = [[NSDate date] timeIntervalSince1970];
+                            long long show = [[NSNumber numberWithDouble:time] longLongValue];
+                            NSUInteger hidden = show;
                             if (baset > hidden) {
                                 ools = YES;
                             }
                         }
                     }
-                    [self handleActionWithType:IAPPurchVerSuccess data:lines invokeHandle:ools];
+                    [self handleActionWithType:FMIAPPurchVerSuccess data:lines invokeHandle:ools];
                 });
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self handleActionWithType:IAPPurchVerFailed data:nil];
+                    [self handleActionWithType:FMIAPPurchVerFailed data:nil];
                 });
             }
             NSLog(@"----验证结果 %@", lines);
@@ -325,7 +326,7 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
 }
 
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
-    [self handleActionWithType:IAPPurchFailed data:@{@"error":error.localizedDescription}];
+    [self handleActionWithType:FMIAPPurchFailed data:@{@"error":error.localizedDescription}];
     NSLog(@"------------------错误-----------------:%@", error);
 }
 
@@ -336,50 +337,17 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
 
 #pragma mark - private method
 
-- (void)handleActionWithType:(IAPPurchType)type data:(NSDictionary *)dict invokeHandle:(Boolean)invoke {
+- (void)handleActionWithType:(FMIAPPurchType)type data:(NSDictionary *)dict invokeHandle:(Boolean)invoke {
     
 #ifdef DEBUG
-    switch (type) {
-        case IAPPurchSuccess:
-            NSLog(@"购买成功");
-            break;
-        case IAPPurchFailed:
-            NSLog(@"购买失败");
-            break;
-        case IAPPurchCancle:
-            NSLog(@"用户取消购买");
-            break;
-        case IAPPurchVerFailed:
-            NSLog(@"订单校验失败");
-            break;
-        case IAPPurchVerSuccess:
-            NSLog(@"订单校验成功");
-            break;
-        case IAPPurchNotAllow:
-            NSLog(@"不允许程序内付费");
-            break;
-        case IAPPurchRestoreNotBuy:
-            NSLog(@"购买数量为0");
-            break;
-        case IAPPurchRestoreFailed:
-            NSLog(@"内购恢复失败");
-            break;
-        case IAPPurchEmptyID:
-            NSLog(@"商品ID为空");
-            break;
-        case IAPPurchNoProduct:
-            NSLog(@"没有可购买商品");
-            break;
-        default:
-            break;
-    }
+    NSLog([[self class] tipWithType:type]);
 #endif
-    if (type == IAPPurchSuccess) {
+    if (type == FMIAPPurchSuccess) {
         return;
     }
     
     if (invoke && _handle) {
-        if (type == IAPPurchVerSuccess || type == IAPPurchSuccess) {
+        if (type == FMIAPPurchVerSuccess || type == FMIAPPurchSuccess) {
             [SVProgressHUD dismiss];
             NSArray *category_o9R = dict[@"pending_renewal_info"];
             NSDictionary *additionsv;
@@ -419,44 +387,44 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
         }
         
         NSString *andom8 = dict[@"error"];
-        if (type == IAPPurchFailed && [andom8 containsString:@"断开"]) {
+        if (type == FMIAPPurchFailed && [andom8 containsString:@"断开"]) {
             [SVProgressHUD showErrorWithStatus:@"未检测到网络，请检查网络设置或者在设置中打开允许APP使用网络的权限"];
         }
         _handle(type, dict);
     }
 }
 
-+ (NSString *_Nullable)tipWithType:(IAPPurchType)type {
++ (NSString *_Nullable)tipWithType:(FMIAPPurchType)type {
     NSString *stack = @"";
     switch (type) {
-        case IAPPurchSuccess:
+        case FMIAPPurchSuccess:
             stack = @"购买成功";
             break;
-        case IAPPurchFailed:
+        case FMIAPPurchFailed:
             stack = @"购买失败";
             break;
-        case IAPPurchCancle:
+        case FMIAPPurchCancle:
             stack = @"用户取消购买";
             break;
-        case IAPPurchVerFailed:
+        case FMIAPPurchVerFailed:
             stack = @"订单校验失败";
             break;
-        case IAPPurchVerSuccess:
+        case FMIAPPurchVerSuccess:
             stack = @"订单校验成功";
             break;
-        case IAPPurchNotAllow:
+        case FMIAPPurchNotAllow:
             stack = @"不允许程序内付费";
             break;
-        case IAPPurchRestoreNotBuy:
+        case FMIAPPurchRestoreNotBuy:
             stack = @"购买数量为0";
             break;
-        case IAPPurchRestoreFailed:
+        case FMIAPPurchRestoreFailed:
             stack = @"内购恢复失败";
             break;
-        case IAPPurchEmptyID:
+        case FMIAPPurchEmptyID:
             stack = @"商品ID为空";
             break;
-        case IAPPurchNoProduct:
+        case FMIAPPurchNoProduct:
             stack = @"没有可购买商品";
             break;
         default:
@@ -465,7 +433,7 @@ typedef NS_ENUM(NSInteger, ENUMRestoreProgress) {
     return stack;
 }
 
-- (void)handleActionWithType:(IAPPurchType)type data:(NSDictionary *)dict {
+- (void)handleActionWithType:(FMIAPPurchType)type data:(NSDictionary *)dict {
     [self handleActionWithType:type data:dict invokeHandle:true];
 }
 
