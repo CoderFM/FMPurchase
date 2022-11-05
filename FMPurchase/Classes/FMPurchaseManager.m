@@ -65,6 +65,7 @@ typedef NS_ENUM(NSInteger, FMENUMRestoreProgress) {
 
 #pragma mark - public method
 - (void)startPurchaseWithProductId:(NSString * _Nonnull)productId completeHandle:(FMIAPCompletionHandle _Nullable)handle {
+    [SVProgressHUD show];
     NSArray* keyboardI = [SKPaymentQueue defaultQueue].transactions;
     if (keyboardI.count > 0) {
         SKPaymentTransaction* node = [keyboardI firstObject];
@@ -127,6 +128,7 @@ typedef NS_ENUM(NSInteger, FMENUMRestoreProgress) {
 
 
 - (void)restorePurchasesWithCompleteHandle:(FMIAPCompletionHandle)handle {
+    [SVProgressHUD showWithStatus:@"恢复中..."];
     _restoreProgress = FMENUMRestoreProgressStart;
     _handle = handle;
     [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
@@ -338,7 +340,12 @@ typedef NS_ENUM(NSInteger, FMENUMRestoreProgress) {
 #pragma mark - private method
 
 - (void)handleActionWithType:(FMIAPPurchType)type data:(NSDictionary *)dict invokeHandle:(Boolean)invoke {
-    
+    if (![NSThread isMainThread]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self handleActionWithType:type data:dict invokeHandle:invoke];
+        });
+        return;
+    }
 #ifdef DEBUG
     NSLog([[self class] tipWithType:type]);
 #endif
@@ -385,9 +392,14 @@ typedef NS_ENUM(NSInteger, FMENUMRestoreProgress) {
         } else {
            [SVProgressHUD dismiss];
         }
-        
-        NSString *andom8 = dict[@"error"];
-        if (type == FMIAPPurchFailed && [andom8 containsString:@"断开"]) {
+        NSString *errorStr = dict[@"error"];
+        if (type == FMIAPPurchFailed && [errorStr containsString:@"断开"]) {
+            [SVProgressHUD showErrorWithStatus:@"未检测到网络，请检查网络设置或者在设置中打开允许APP使用网络的权限"];
+        }
+        if (type == FMIAPPurchFailed && [errorStr containsString:@"未知"]) {
+            [SVProgressHUD showErrorWithStatus:@"未检测到网络，请检查网络设置或者在设置中打开允许APP使用网络的权限"];
+        }
+        if (type == FMIAPPurchFailed && [errorStr containsString:@"不允许"]) {
             [SVProgressHUD showErrorWithStatus:@"未检测到网络，请检查网络设置或者在设置中打开允许APP使用网络的权限"];
         }
         _handle(type, dict);

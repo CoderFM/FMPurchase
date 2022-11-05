@@ -36,19 +36,8 @@ typedef void (^FMIAPCompletionHandle)(FMIAPPurchType type, NSDictionary *dict);
 
 + (instancetype)sharedInstance;
 
-
-- (void)addTransactionObserver;
-
-
-- (void)removeTransactionObserver;
-
-
 - (void)startPurchaseWithProductId:(NSString * _Nonnull)productId
                     completeHandle:(FMIAPCompletionHandle _Nullable)handle;
-
-
-- (void)startSubscribeWithProductId:(NSString * _Nonnull)productId completeHandle:(FMIAPCompletionHandle _Nullable)handle;
-
 
 - (void)restorePurchasesWithCompleteHandle:(FMIAPCompletionHandle _Nullable)handle;
 

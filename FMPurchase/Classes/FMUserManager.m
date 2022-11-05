@@ -7,7 +7,7 @@
 
 #import "FMUserManager.h"
 
-static NSString * const KEY_USER = @"TranslateOfficer";
+static NSString * const FMUserManagerNSKeyedUnarchiverKey = @"FMUserManagerNSKeyedUnarchiverKey";
 
 @implementation FMUserManager
 
@@ -21,7 +21,7 @@ static NSString * const KEY_USER = @"TranslateOfficer";
 - (void)saveUserData{
     NSData *normal = [NSKeyedArchiver archivedDataWithRootObject:self];
     NSUserDefaults *input = [NSUserDefaults standardUserDefaults];
-    [input setObject:normal forKey:KEY_USER];
+    [input setObject:normal forKey:FMUserManagerNSKeyedUnarchiverKey];
     [input synchronize];
 }
 
@@ -30,7 +30,7 @@ static NSString * const KEY_USER = @"TranslateOfficer";
     static dispatch_once_t top;
     dispatch_once(&top, ^{
         NSUserDefaults *inputX = [NSUserDefaults standardUserDefaults];
-        FMUserManager *q_width = [NSKeyedUnarchiver unarchiveObjectWithData:[inputX objectForKey:KEY_USER]] ;
+        FMUserManager *q_width = [NSKeyedUnarchiver unarchiveObjectWithData:[inputX objectForKey:FMUserManagerNSKeyedUnarchiverKey]] ;
         if (q_width) {
             helper = q_width;
         } else {
@@ -48,7 +48,7 @@ static NSString * const KEY_USER = @"TranslateOfficer";
 
 - (void)clearUserData {
     NSUserDefaults *inputD = [NSUserDefaults standardUserDefaults];
-    [inputD removeObjectForKey:KEY_USER];
+    [inputD removeObjectForKey:FMUserManagerNSKeyedUnarchiverKey];
     [inputD synchronize];
 }
 
